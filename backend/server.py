@@ -163,92 +163,125 @@ async def delete_game(game_id: str):
         raise HTTPException(status_code=404, detail="Game not found")
     return {"message": "Game deleted successfully"}
 
-# Initialize GN-Math games from the repository
-@api_router.post("/games/init-defaults")
-async def init_default_games():
-    """Initialize the database with GN-Math games"""
-    gn_math_games = [
+# Clever.college proxy for hidden gn-math games
+@api_router.get("/clever-proxy")
+async def clever_proxy():
+    """Proxy to clever.college which hides gn-math games behind clicks"""
+    try:
+        async with httpx.AsyncClient(timeout=30.0, follow_redirects=True) as client:
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+            }
+            
+            response = await client.get('https://clever.college/', headers=headers)
+            
+            if response.status_code == 200:
+                content = response.text
+                
+                # Add auto-click script to reveal hidden games
+                auto_click_script = """
+                <script>
+                // Auto-click script to reveal hidden gn-math games
+                window.addEventListener('load', function() {
+                    console.log('Auto-clicking to reveal hidden games...');
+                    
+                    // Function to simulate clicks
+                    function simulateClick(x, y) {
+                        const event = new MouseEvent('click', {
+                            view: window,
+                            bubbles: true,
+                            cancelable: true,
+                            clientX: x,
+                            clientY: y
+                        });
+                        document.elementFromPoint(x, y)?.dispatchEvent(event);
+                    }
+                    
+                    // Click multiple times at different positions to reveal games
+                    setTimeout(() => simulateClick(window.innerWidth/2, window.innerHeight/2), 1000);
+                    setTimeout(() => simulateClick(window.innerWidth/2, window.innerHeight/3), 2000);
+                    setTimeout(() => simulateClick(window.innerWidth/2, window.innerHeight/4), 3000);
+                    setTimeout(() => simulateClick(100, 100), 4000);
+                    setTimeout(() => simulateClick(200, 200), 5000);
+                    
+                    // Also try clicking on common elements
+                    setTimeout(() => {
+                        const clickableElements = document.querySelectorAll('div, span, a, button');
+                        for(let i = 0; i < Math.min(clickableElements.length, 10); i++) {
+                            setTimeout(() => clickableElements[i]?.click(), i * 500);
+                        }
+                    }, 6000);
+                });
+                </script>
+                """
+                
+                # Inject the auto-click script before closing body tag
+                content = content.replace('</body>', auto_click_script + '</body>')
+                
+                return Response(content=content, media_type="text/html")
+            else:
+                raise HTTPException(status_code=response.status_code, detail="Failed to load clever.college")
+                
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Clever proxy error: {str(e)}")
+
+# Update games initialization to include clever.college method
+@api_router.post("/games/init-clever")
+async def init_clever_games():
+    """Initialize games database with clever.college hidden games info"""
+    clever_games = [
         {
-            "title": "Undertale",
+            "title": "🎯 GN-Math Games Portal",
+            "description": "Access all GN-Math games through clever.college (click to reveal hidden games)",
+            "category": "Portal",
+            "game_url": f"{os.environ.get('REACT_APP_BACKEND_URL', 'http://localhost:8001')}/api/clever-proxy",
+            "thumbnail": "https://images.unsplash.com/photo-1551698618-1dfe5d97d256?w=300&h=200&fit=crop"
+        },
+        {
+            "title": "Undertale", 
             "description": "Classic indie RPG - determination and friendship",
-            "category": "RPG", 
-            "game_url": "https://raw.githubusercontent.com/genizy/web-port/main/undertale/index.html",
+            "category": "RPG",
+            "game_url": "https://clever.college/",
             "thumbnail": "https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=300&h=200&fit=crop"
         },
         {
-            "title": "OMORI", 
-            "description": "Psychological horror RPG about anxiety and depression",
+            "title": "OMORI",
+            "description": "Psychological horror RPG about anxiety and depression", 
             "category": "RPG",
-            "game_url": "https://raw.githubusercontent.com/genizy/web-port/main/omori-fixed/index.html",
+            "game_url": "https://clever.college/",
             "thumbnail": "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=300&h=200&fit=crop"
         },
         {
             "title": "Pizza Tower",
             "description": "Fast-paced platformer with cartoon style",
-            "category": "Platformer", 
-            "game_url": "https://raw.githubusercontent.com/genizy/web-port/main/pizza-tower/index.html",
+            "category": "Platformer",
+            "game_url": "https://clever.college/", 
             "thumbnail": "https://images.unsplash.com/photo-1606144042614-b2417e99c4e3?w=300&h=200&fit=crop"
         },
         {
             "title": "Cuphead",
             "description": "Run and gun with 1930s cartoon art style",
             "category": "Action",
-            "game_url": "https://raw.githubusercontent.com/genizy/web-port/main/cuphead/index.html", 
+            "game_url": "https://clever.college/",
             "thumbnail": "https://images.unsplash.com/photo-1606092195730-5d7b9af1efc5?w=300&h=200&fit=crop"
-        },
-        {
-            "title": "Hotline Miami",
-            "description": "Top-down action game with neon aesthetics", 
-            "category": "Action",
-            "game_url": "https://raw.githubusercontent.com/genizy/web-port/main/hotline-miami/index.html",
-            "thumbnail": "https://images.unsplash.com/photo-1528819622765-d6bcf132f793?w=300&h=200&fit=crop"
-        },
-        {
-            "title": "Buckshot Roulette",
-            "description": "Horror game with Russian roulette mechanics",
-            "category": "Horror",
-            "game_url": "https://raw.githubusercontent.com/genizy/web-port/main/buckshot-roulette/index.html",
-            "thumbnail": "https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=300&h=200&fit=crop"
-        },
-        {
-            "title": "Baldi's Basics Plus",
-            "description": "Educational horror parody game",
-            "category": "Horror",
-            "game_url": "https://raw.githubusercontent.com/genizy/web-port/main/baldi-plus/index.html",
-            "thumbnail": "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=300&h=200&fit=crop"
         },
         {
             "title": "ULTRAKILL",
             "description": "Fast-paced FPS with blood mechanics",
-            "category": "Action", 
-            "game_url": "https://raw.githubusercontent.com/genizy/web-port/main/ultrakill/index.html",
+            "category": "Action",
+            "game_url": "https://clever.college/",
             "thumbnail": "https://images.unsplash.com/photo-1606144042614-b2417e99c4e3?w=300&h=200&fit=crop"
-        },
-        {
-            "title": "That's Not My Neighbor",
-            "description": "Horror game about identifying doppelgangers",
-            "category": "Horror",
-            "game_url": "https://raw.githubusercontent.com/genizy/web-port/main/thats-not-my-neighbor/index.html", 
-            "thumbnail": "https://images.unsplash.com/photo-1606092195730-5d7b9af1efc5?w=300&h=200&fit=crop"
-        },
-        {
-            "title": "People Playground",
-            "description": "Physics sandbox with ragdoll characters",
-            "category": "Sandbox",
-            "game_url": "https://raw.githubusercontent.com/genizy/web-port/main/people-playground/index.html",
-            "thumbnail": "https://images.unsplash.com/photo-1528819622765-d6bcf132f793?w=300&h=200&fit=crop"
         }
     ]
     
-    # Clear existing games first
+    # Clear existing games and add clever.college games
     await db.games.delete_many({})
     
-    # Insert GN-Math games
-    for game_data in gn_math_games:
+    for game_data in clever_games:
         game_obj = Game(**game_data)
         await db.games.insert_one(game_obj.dict())
     
-    return {"message": f"Initialized {len(gn_math_games)} GN-Math games"}
+    return {"message": f"Initialized {len(clever_games)} games via clever.college"}
 
 # Enhanced proxy with network bypass techniques
 @api_router.post("/proxy-enhanced")
