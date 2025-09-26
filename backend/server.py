@@ -163,51 +163,79 @@ async def delete_game(game_id: str):
         raise HTTPException(status_code=404, detail="Game not found")
     return {"message": "Game deleted successfully"}
 
-# Initialize default games
+# Initialize GN-Math games from the repository
 @api_router.post("/games/init-defaults")
 async def init_default_games():
-    """Initialize the database with default games"""
-    default_games = [
+    """Initialize the database with GN-Math games"""
+    gn_math_games = [
         {
-            "title": "2048",
-            "description": "Slide numbered tiles to combine them and reach 2048",
-            "category": "Puzzle",
-            "game_url": "https://play2048.co/",
-            "thumbnail": "https://images.unsplash.com/photo-1606092195730-5d7b9af1efc5?w=300&h=200&fit=crop"
-        },
-        {
-            "title": "Snake Game",
-            "description": "Classic snake game - eat food and grow longer",
-            "category": "Arcade",
-            "game_url": "https://www.google.com/fbx?fbx=snake_arcade",
-            "thumbnail": "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=300&h=200&fit=crop"
-        },
-        {
-            "title": "Pac-Man",
-            "description": "Classic arcade game - eat dots and avoid ghosts",
-            "category": "Arcade",
-            "game_url": "https://www.google.com/logos/2010/pacman10-i.html",
+            "title": "Undertale",
+            "description": "Classic indie RPG - determination and friendship",
+            "category": "RPG", 
+            "game_url": "https://raw.githubusercontent.com/genizy/web-port/main/undertale/index.html",
             "thumbnail": "https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=300&h=200&fit=crop"
         },
         {
-            "title": "Tetris",
-            "description": "Stack falling blocks to clear lines",
-            "category": "Puzzle",
-            "game_url": "https://tetris.com/play-tetris",
+            "title": "OMORI", 
+            "description": "Psychological horror RPG about anxiety and depression",
+            "category": "RPG",
+            "game_url": "https://raw.githubusercontent.com/genizy/web-port/main/omori-fixed/index.html",
+            "thumbnail": "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=300&h=200&fit=crop"
+        },
+        {
+            "title": "Pizza Tower",
+            "description": "Fast-paced platformer with cartoon style",
+            "category": "Platformer", 
+            "game_url": "https://raw.githubusercontent.com/genizy/web-port/main/pizza-tower/index.html",
             "thumbnail": "https://images.unsplash.com/photo-1606144042614-b2417e99c4e3?w=300&h=200&fit=crop"
         },
         {
-            "title": "Solitaire",
-            "description": "Classic card game",
-            "category": "Card",
-            "game_url": "https://www.google.com/logos/2016/solitaire/standalone.html",
+            "title": "Cuphead",
+            "description": "Run and gun with 1930s cartoon art style",
+            "category": "Action",
+            "game_url": "https://raw.githubusercontent.com/genizy/web-port/main/cuphead/index.html", 
             "thumbnail": "https://images.unsplash.com/photo-1606092195730-5d7b9af1efc5?w=300&h=200&fit=crop"
         },
         {
-            "title": "Chess",
-            "description": "Play chess against computer or friends",
-            "category": "Strategy",
-            "game_url": "https://www.chess.com/play/computer",
+            "title": "Hotline Miami",
+            "description": "Top-down action game with neon aesthetics", 
+            "category": "Action",
+            "game_url": "https://raw.githubusercontent.com/genizy/web-port/main/hotline-miami/index.html",
+            "thumbnail": "https://images.unsplash.com/photo-1528819622765-d6bcf132f793?w=300&h=200&fit=crop"
+        },
+        {
+            "title": "Buckshot Roulette",
+            "description": "Horror game with Russian roulette mechanics",
+            "category": "Horror",
+            "game_url": "https://raw.githubusercontent.com/genizy/web-port/main/buckshot-roulette/index.html",
+            "thumbnail": "https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=300&h=200&fit=crop"
+        },
+        {
+            "title": "Baldi's Basics Plus",
+            "description": "Educational horror parody game",
+            "category": "Horror",
+            "game_url": "https://raw.githubusercontent.com/genizy/web-port/main/baldi-plus/index.html",
+            "thumbnail": "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=300&h=200&fit=crop"
+        },
+        {
+            "title": "ULTRAKILL",
+            "description": "Fast-paced FPS with blood mechanics",
+            "category": "Action", 
+            "game_url": "https://raw.githubusercontent.com/genizy/web-port/main/ultrakill/index.html",
+            "thumbnail": "https://images.unsplash.com/photo-1606144042614-b2417e99c4e3?w=300&h=200&fit=crop"
+        },
+        {
+            "title": "That's Not My Neighbor",
+            "description": "Horror game about identifying doppelgangers",
+            "category": "Horror",
+            "game_url": "https://raw.githubusercontent.com/genizy/web-port/main/thats-not-my-neighbor/index.html", 
+            "thumbnail": "https://images.unsplash.com/photo-1606092195730-5d7b9af1efc5?w=300&h=200&fit=crop"
+        },
+        {
+            "title": "People Playground",
+            "description": "Physics sandbox with ragdoll characters",
+            "category": "Sandbox",
+            "game_url": "https://raw.githubusercontent.com/genizy/web-port/main/people-playground/index.html",
             "thumbnail": "https://images.unsplash.com/photo-1528819622765-d6bcf132f793?w=300&h=200&fit=crop"
         }
     ]
@@ -215,12 +243,147 @@ async def init_default_games():
     # Clear existing games first
     await db.games.delete_many({})
     
-    # Insert default games
-    for game_data in default_games:
+    # Insert GN-Math games
+    for game_data in gn_math_games:
         game_obj = Game(**game_data)
         await db.games.insert_one(game_obj.dict())
     
-    return {"message": f"Initialized {len(default_games)} default games"}
+    return {"message": f"Initialized {len(gn_math_games)} GN-Math games"}
+
+# Enhanced proxy with network bypass techniques
+@api_router.post("/proxy-enhanced")
+async def proxy_enhanced(request: ProxyRequest):
+    """Enhanced proxy with network bypass techniques for sites like Reddit"""
+    try:
+        if not request.url.startswith(('http://', 'https://')):
+            request.url = 'https://' + request.url
+            
+        # Rotating User-Agents for better bypass
+        user_agents = [
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0',
+            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:121.0) Gecko/20100101 Firefox/121.0'
+        ]
+        
+        import random
+        selected_ua = random.choice(user_agents)
+        
+        # Enhanced headers to mimic real browser
+        headers = {
+            'User-Agent': selected_ua,
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+            'Accept-Language': 'en-US,en;q=0.9',
+            'Accept-Encoding': 'gzip, deflate, br',
+            'DNT': '1',
+            'Connection': 'keep-alive',
+            'Upgrade-Insecure-Requests': '1',
+            'Sec-Fetch-Dest': 'document',
+            'Sec-Fetch-Mode': 'navigate',
+            'Sec-Fetch-Site': 'none',
+            'Cache-Control': 'max-age=0'
+        }
+        
+        # Use longer timeout and retry mechanism
+        async with httpx.AsyncClient(
+            timeout=45.0, 
+            follow_redirects=True,
+            limits=httpx.Limits(max_keepalive_connections=5, max_connections=10)
+        ) as client:
+            
+            # Add delay to avoid rate limiting
+            import asyncio
+            await asyncio.sleep(1)
+            
+            response = await client.get(request.url, headers=headers)
+            
+            # Get content type
+            content_type = response.headers.get('content-type', 'text/html')
+            
+            if 'text/html' in content_type:
+                # Enhanced URL rewriting for better compatibility
+                content = response.text
+                base_url = f"{urlparse(request.url).scheme}://{urlparse(request.url).netloc}"
+                
+                # More comprehensive URL fixing
+                content = re.sub(r'href="(/[^"]*)"', f'href="{base_url}\\1"', content)
+                content = re.sub(r'src="(/[^"]*)"', f'src="{base_url}\\1"', content)
+                content = re.sub(r"href='(/[^']*)'", f"href='{base_url}\\1'", content)
+                content = re.sub(r"src='(/[^']*)'", f"src='{base_url}\\1'", content)
+                
+                # Fix protocol-relative URLs
+                content = re.sub(r'href="//([^"]*)"', r'href="https://\1"', content)
+                content = re.sub(r'src="//([^"]*)"', r'src="https://\1"', content)
+                
+                return Response(content=content, media_type="text/html")
+            else:
+                return Response(content=response.content, media_type=content_type)
+                
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Enhanced proxy error: {str(e)}")
+
+# GN-Math specific proxy
+@api_router.get("/gn-math-proxy")
+async def gn_math_proxy(game: str = Query(...)):
+    """Specific proxy for GN-Math games"""
+    try:
+        # Try to access the game directly from the repository
+        base_urls = [
+            f"https://gn-math.github.io/{game}/",
+            f"https://raw.githubusercontent.com/genizy/web-port/main/{game}/index.html",
+            f"https://genizy.github.io/web-port/{game}/"
+        ]
+        
+        async with httpx.AsyncClient(timeout=30.0, follow_redirects=True) as client:
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+            }
+            
+            for url in base_urls:
+                try:
+                    response = await client.get(url, headers=headers)
+                    if response.status_code == 200:
+                        content_type = response.headers.get('content-type', 'text/html')
+                        
+                        if 'text/html' in content_type:
+                            content = response.text
+                            # Fix relative URLs for the game
+                            game_base = f"https://gn-math.github.io/{game}"
+                            content = re.sub(r'href="([^http][^"]*)"', f'href="{game_base}/\\1"', content)
+                            content = re.sub(r'src="([^http][^"]*)"', f'src="{game_base}/\\1"', content)
+                            
+                            return Response(content=content, media_type="text/html")
+                        else:
+                            return Response(content=response.content, media_type=content_type)
+                except:
+                    continue
+                    
+        raise HTTPException(status_code=404, detail=f"Game '{game}' not found in GN-Math repository")
+        
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"GN-Math proxy error: {str(e)}")
+
+# Get available GN-Math games
+@api_router.get("/gn-math-games")
+async def get_gn_math_games():
+    """Get list of available GN-Math games from repository"""
+    gn_math_game_list = [
+        "undertale", "omori-fixed", "pizza-tower", "cuphead", "hotline-miami",
+        "buckshot-roulette", "baldi-plus", "ultrakill", "thats-not-my-neighbor", 
+        "people-playground", "amanda-the-adventurer", "andys-apple-farm", 
+        "baldi-remaster", "bendy", "bergentruck", "bloodmoney", "class-of-09",
+        "dead-plate", "deadseat", "donottakethiscathome", "fears-to-fathom",
+        "happy-sheepies", "jelly-drift", "karlson", "kindergarten",
+        "lacysflashgames", "milkman-karlson", "raft", "slender", "speed-stars",
+        "the-man-in-the-window", "undertale-yellow", "web-fishing", "yume-nikki"
+    ]
+    
+    return {
+        "games": gn_math_game_list,
+        "total": len(gn_math_game_list),
+        "base_url": "https://gn-math.github.io"
+    }
 
 # Original routes
 @api_router.get("/")
