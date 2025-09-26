@@ -115,7 +115,52 @@ const ProxyBrowser = () => {
   );
 };
 
-// Games Component
+// GN-Math Portal Component  
+const GNMathPortal = () => {
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-pink-900 to-red-900 p-6">
+      <div className="max-w-6xl mx-auto">
+        <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 mb-6 border border-white/20">
+          <h2 className="text-2xl font-bold text-white mb-4">🎯 GN-Math Games Portal</h2>
+          <div className="bg-green-500/20 border border-green-500/50 rounded-lg p-4 mb-4">
+            <p className="text-green-100 text-sm">
+              ✅ <strong>Clever Bypass:</strong> This loads clever.college which appears as an educational site but reveals GN-Math games when clicked.
+              <br />🖱️ <strong>How to use:</strong> The page will auto-click to reveal hidden games, or you can click around the screen yourself.
+            </p>
+          </div>
+        </div>
+
+        <div className="bg-white/5 backdrop-blur-sm rounded-xl overflow-hidden border border-white/10">
+          <div className="bg-gray-900/50 px-4 py-2 border-b border-white/10">
+            <p className="text-white text-sm">🎮 GN-Math Games - Click anywhere on the screen to reveal games</p>
+          </div>
+          <div className="relative">
+            <iframe
+              src={`${BACKEND_URL}/api/clever-proxy`}
+              className="w-full h-[600px] border-0"
+              title="GN-Math Games Portal"
+              sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
+            />
+          </div>
+        </div>
+
+        <div className="mt-6 bg-white/10 backdrop-blur-md rounded-xl p-4 border border-white/20">
+          <p className="text-white/80 text-sm">
+            <strong>💡 Tips:</strong>
+          </p>
+          <ul className="text-white/70 text-sm list-disc list-inside mt-2 space-y-1">
+            <li>The page auto-clicks to reveal games, but you can also click manually</li>
+            <li>If games don't appear, try clicking different areas of the screen</li>
+            <li>This method bypasses school filters by appearing as a legitimate educational site</li>
+            <li>All the GN-Math games (Undertale, OMORI, Pizza Tower, etc.) are available through this portal</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Updated Games Component with GN-Math integration
 const GamesBrowser = () => {
   const [games, setGames] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -125,12 +170,12 @@ const GamesBrowser = () => {
   useEffect(() => {
     fetchGames();
     fetchCategories();
-    initializeDefaultGames();
+    initializeCleverGames();
   }, []);
 
-  const initializeDefaultGames = async () => {
+  const initializeCleverGames = async () => {
     try {
-      await axios.post(`${API}/games/init-defaults`);
+      await axios.post(`${API}/games/init-clever`);
     } catch (err) {
       console.log('Games might already be initialized');
     }
@@ -164,7 +209,7 @@ const GamesBrowser = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-green-900 via-teal-900 to-blue-900 flex items-center justify-center">
-        <div className="text-white text-xl">Loading games... 🎮</div>
+        <div className="text-white text-xl">Loading GN-Math games... 🎮</div>
       </div>
     );
   }
@@ -173,7 +218,12 @@ const GamesBrowser = () => {
     <div className="min-h-screen bg-gradient-to-br from-green-900 via-teal-900 to-blue-900 p-6">
       <div className="max-w-6xl mx-auto">
         <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 mb-6 border border-white/20">
-          <h2 className="text-2xl font-bold text-white mb-4">🎮 Games Collection</h2>
+          <h2 className="text-2xl font-bold text-white mb-4">🎮 GN-Math Games Collection</h2>
+          <div className="bg-blue-500/20 border border-blue-500/50 rounded-lg p-4 mb-4">
+            <p className="text-blue-100 text-sm">
+              🌟 <strong>Now featuring clever.college integration!</strong> Access all GN-Math games through the hidden portal method.
+            </p>
+          </div>
           
           <div className="flex flex-wrap gap-2 mb-6">
             <button
@@ -215,21 +265,34 @@ const GamesBrowser = () => {
                 ) : (
                   <div className="text-white text-4xl">🎮</div>
                 )}
+                {game.title.includes('Portal') && (
+                  <div className="absolute inset-0 bg-gradient-to-r from-purple-600/20 to-pink-600/20 flex items-center justify-center">
+                    <div className="text-white text-6xl">🎯</div>
+                  </div>
+                )}
               </div>
               <div className="p-4">
                 <h3 className="text-white font-bold text-lg mb-2">{game.title}</h3>
                 <p className="text-white/80 text-sm mb-3 line-clamp-2">{game.description}</p>
                 <div className="flex items-center justify-between">
-                  <span className="bg-white/20 text-white text-xs px-2 py-1 rounded-full">
+                  <span className={`text-xs px-2 py-1 rounded-full ${
+                    game.category === 'Portal' 
+                      ? 'bg-purple-500/20 text-purple-200' 
+                      : 'bg-white/20 text-white'
+                  }`}>
                     {game.category}
                   </span>
                   <a
                     href={game.game_url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1"
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1 ${
+                      game.title.includes('Portal')
+                        ? 'bg-purple-600 hover:bg-purple-700 text-white'
+                        : 'bg-blue-600 hover:bg-blue-700 text-white'
+                    }`}
                   >
-                    Play ▶️
+                    {game.title.includes('Portal') ? 'Open Portal 🎯' : 'Play ▶️'}
                   </a>
                 </div>
               </div>
