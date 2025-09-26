@@ -11,6 +11,7 @@ const ProxyBrowser = () => {
   const [loading, setLoading] = useState(false);
   const [proxyContent, setProxyContent] = useState('');
   const [error, setError] = useState('');
+  const [useEnhanced, setUseEnhanced] = useState(false);
 
   const handleProxy = async (e) => {
     e.preventDefault();
@@ -21,7 +22,8 @@ const ProxyBrowser = () => {
     setProxyContent('');
     
     try {
-      const response = await axios.post(`${API}/proxy`, { url });
+      const endpoint = useEnhanced ? 'proxy-enhanced' : 'proxy';
+      const response = await axios.post(`${API}/${endpoint}`, { url });
       setProxyContent(response.data);
     } catch (err) {
       setError(err.response?.data?.detail || 'Failed to load website');
@@ -41,13 +43,27 @@ const ProxyBrowser = () => {
               Please respect website terms of service and local laws.
             </p>
           </div>
+
+          <div className="mb-4">
+            <label className="flex items-center gap-3 text-white">
+              <input
+                type="checkbox"
+                checked={useEnhanced}
+                onChange={(e) => setUseEnhanced(e.target.checked)}
+                className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+              />
+              <span className="text-sm">
+                🚀 Enhanced Mode (Better network bypass - try this for blocked sites like Reddit)
+              </span>
+            </label>
+          </div>
           
           <form onSubmit={handleProxy} className="flex gap-3">
             <input
               type="text"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
-              placeholder="Enter website URL (e.g., example.com)"
+              placeholder="Enter website URL (e.g., reddit.com, example.com)"
               className="flex-1 px-4 py-3 bg-white/10 border border-white/30 rounded-lg text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
             <button
@@ -65,6 +81,15 @@ const ProxyBrowser = () => {
               )}
             </button>
           </form>
+
+          <div className="mt-4 text-sm text-white/70">
+            <p><strong>💡 Tips for bypassing network blocks:</strong></p>
+            <ul className="list-disc list-inside mt-2 space-y-1">
+              <li>Use Enhanced Mode for better bypass capabilities</li>
+              <li>Try different URLs: reddit.com, old.reddit.com, np.reddit.com</li>
+              <li>Some enterprise firewalls may still block certain domains</li>
+            </ul>
+          </div>
         </div>
 
         {error && (
@@ -76,7 +101,9 @@ const ProxyBrowser = () => {
         {proxyContent && (
           <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
             <div className="bg-gray-100 px-4 py-2 border-b border-gray-200">
-              <p className="text-sm text-gray-600">Viewing: {url}</p>
+              <p className="text-sm text-gray-600">
+                Viewing: {url} {useEnhanced && "(Enhanced Mode)"}
+              </p>
             </div>
             <div className="h-96 overflow-auto">
               <div dangerouslySetInnerHTML={{ __html: proxyContent }} />
