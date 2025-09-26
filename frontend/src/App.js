@@ -349,6 +349,16 @@ function App() {
               >
                 🎮 Games
               </button>
+              <button
+                onClick={() => setCurrentView('gnmath')}
+                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                  currentView === 'gnmath'
+                    ? 'bg-white text-gray-900'
+                    : 'text-white hover:bg-white/20'
+                }`}
+              >
+                🎯 GN-Math Portal
+              </button>
             </div>
           </div>
         </div>
@@ -358,16 +368,17 @@ function App() {
       <div className="pt-20">
         {currentView === 'proxy' && <ProxyBrowser />}
         {currentView === 'games' && <GamesBrowser />}
+        {currentView === 'gnmath' && <GNMathPortal />}
       </div>
 
       {/* Footer */}
       <footer className="bg-black/20 backdrop-blur-md border-t border-white/10 py-6">
         <div className="max-w-6xl mx-auto px-6 text-center">
           <p className="text-white/60 text-sm">
-            AccessAnywhere - Unblock websites and enjoy games responsibly
+            AccessAnywhere - Unblock websites and access GN-Math games via clever.college
           </p>
           <p className="text-white/40 text-xs mt-2">
-            Educational use only. Please respect website terms and local regulations.
+            Educational use only. Clever.college integration for bypassing school filters.
           </p>
         </div>
       </footer>
