@@ -198,8 +198,7 @@ test_plan:
     - "Web proxy functionality"
     - "Games collection API"
     - "Games collection display"
-  stuck_tasks:
-    - "Games collection display"
+  stuck_tasks: []
   test_all: false
   test_priority: "high_first"
 
