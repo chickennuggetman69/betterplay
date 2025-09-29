@@ -193,63 +193,50 @@ async def gnmath_proxy():
 
 # Remove the games initialization - we'll just have the GN-Math portal
 
-# Enhanced proxy with network bypass techniques
-@api_router.post("/proxy-enhanced")
-async def proxy_enhanced(request: ProxyRequest):
-    """Enhanced proxy with network bypass techniques for sites like Reddit"""
+# Smart proxy that handles both search queries and URLs
+@api_router.post("/smart-proxy")
+async def smart_proxy(request: ProxyRequest):
+    """Smart proxy that detects URLs vs search queries and handles both"""
     try:
-        if not request.url.startswith(('http://', 'https://')):
-            request.url = 'https://' + request.url
-            
-        # Rotating User-Agents for better bypass
-        user_agents = [
-            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-            'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-            'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0',
-            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:121.0) Gecko/20100101 Firefox/121.0'
-        ]
+        query = request.url.strip()
         
-        import random
-        selected_ua = random.choice(user_agents)
+        # Check if it's a URL (has protocol or looks like domain)
+        is_url = (
+            query.startswith(('http://', 'https://')) or 
+            ('.' in query and ' ' not in query and len(query.split('.')) >= 2) or
+            query.startswith('www.')
+        )
         
-        # Enhanced headers to mimic real browser
-        headers = {
-            'User-Agent': selected_ua,
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
-            'Accept-Language': 'en-US,en;q=0.9',
-            'Accept-Encoding': 'gzip, deflate, br',
-            'DNT': '1',
-            'Connection': 'keep-alive',
-            'Upgrade-Insecure-Requests': '1',
-            'Sec-Fetch-Dest': 'document',
-            'Sec-Fetch-Mode': 'navigate',
-            'Sec-Fetch-Site': 'none',
-            'Cache-Control': 'max-age=0'
-        }
+        if is_url:
+            # Handle as URL proxy
+            if not query.startswith(('http://', 'https://')):
+                query = 'https://' + query
+            target_url = query
+        else:
+            # Handle as search query - use Google search
+            import urllib.parse
+            encoded_query = urllib.parse.quote_plus(query)
+            target_url = f"https://www.google.com/search?q={encoded_query}"
         
-        # Use longer timeout and retry mechanism
-        async with httpx.AsyncClient(
-            timeout=45.0, 
-            follow_redirects=True,
-            limits=httpx.Limits(max_keepalive_connections=5, max_connections=10)
-        ) as client:
+        async with httpx.AsyncClient(timeout=30.0, follow_redirects=True) as client:
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+                'Accept-Language': 'en-US,en;q=0.9',
+                'Accept-Encoding': 'gzip, deflate, br',
+                'DNT': '1',
+                'Connection': 'keep-alive',
+                'Upgrade-Insecure-Requests': '1'
+            }
             
-            # Add delay to avoid rate limiting
-            import asyncio
-            await asyncio.sleep(1)
-            
-            response = await client.get(request.url, headers=headers)
-            
-            # Get content type
+            response = await client.get(target_url, headers=headers)
             content_type = response.headers.get('content-type', 'text/html')
             
             if 'text/html' in content_type:
-                # Enhanced URL rewriting for better compatibility
                 content = response.text
-                base_url = f"{urlparse(request.url).scheme}://{urlparse(request.url).netloc}"
+                base_url = f"{urlparse(target_url).scheme}://{urlparse(target_url).netloc}"
                 
-                # More comprehensive URL fixing
+                # Enhanced URL fixing for better compatibility
                 content = re.sub(r'href="(/[^"]*)"', f'href="{base_url}\\1"', content)
                 content = re.sub(r'src="(/[^"]*)"', f'src="{base_url}\\1"', content)
                 content = re.sub(r"href='(/[^']*)'", f"href='{base_url}\\1'", content)
@@ -264,7 +251,23 @@ async def proxy_enhanced(request: ProxyRequest):
                 return Response(content=response.content, media_type=content_type)
                 
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Enhanced proxy error: {str(e)}")
+        raise HTTPException(status_code=400, detail=f"Smart proxy error: {str(e)}")
+
+# Get search suggestions (optional enhancement)
+@api_router.get("/search-suggestions")
+async def get_search_suggestions(q: str = Query(...)):
+    """Get search suggestions for autocomplete"""
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            # Use Google's suggestion API
+            response = await client.get(
+                f"https://suggestqueries.google.com/complete/search?client=firefox&q={q}"
+            )
+            if response.status_code == 200:
+                return {"suggestions": response.json()[1][:5]}  # Return top 5 suggestions
+            return {"suggestions": []}
+    except:
+        return {"suggestions": []}
 
 # GN-Math specific proxy
 @api_router.get("/gn-math-proxy")
