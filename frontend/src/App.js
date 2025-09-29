@@ -5,91 +5,202 @@ import axios from "axios";
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
-// Proxy Component
-const ProxyBrowser = () => {
-  const [url, setUrl] = useState('');
+// Smart Search/Proxy Component (Google-like)
+const SmartProxy = () => {
+  const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(false);
   const [proxyContent, setProxyContent] = useState('');
   const [error, setError] = useState('');
-  const [useEnhanced, setUseEnhanced] = useState(false);
+  const [suggestions, setSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [isUrl, setIsUrl] = useState(false);
 
-  const handleProxy = async (e) => {
+  // Detect if input is URL or search query
+  const detectInputType = (input) => {
+    const trimmed = input.trim();
+    const isUrlPattern = (
+      trimmed.startsWith('http://') || 
+      trimmed.startsWith('https://') ||
+      trimmed.startsWith('www.') ||
+      (trimmed.includes('.') && !trimmed.includes(' ') && trimmed.split('.').length >= 2)
+    );
+    setIsUrl(isUrlPattern);
+    return isUrlPattern;
+  };
+
+  const handleInputChange = (e) => {
+    const value = e.target.value;
+    setQuery(value);
+    detectInputType(value);
+    
+    // Get suggestions for search queries (not URLs)
+    if (value.length > 2 && !detectInputType(value)) {
+      fetchSuggestions(value);
+    } else {
+      setSuggestions([]);
+      setShowSuggestions(false);
+    }
+  };
+
+  const fetchSuggestions = async (searchQuery) => {
+    try {
+      const response = await axios.get(`${API}/search-suggestions?q=${encodeURIComponent(searchQuery)}`);
+      setSuggestions(response.data.suggestions || []);
+      setShowSuggestions(true);
+    } catch (err) {
+      setSuggestions([]);
+    }
+  };
+
+  const handleSearch = async (e) => {
     e.preventDefault();
-    if (!url) return;
+    if (!query.trim()) return;
     
     setLoading(true);
     setError('');
     setProxyContent('');
+    setShowSuggestions(false);
     
     try {
-      const endpoint = useEnhanced ? 'proxy-enhanced' : 'proxy';
-      const response = await axios.post(`${API}/${endpoint}`, { url });
+      const response = await axios.post(`${API}/smart-proxy`, { url: query.trim() });
       setProxyContent(response.data);
     } catch (err) {
-      setError(err.response?.data?.detail || 'Failed to load website');
+      setError(err.response?.data?.detail || 'Failed to process request');
     } finally {
       setLoading(false);
     }
   };
 
+  const handleSuggestionClick = (suggestion) => {
+    setQuery(suggestion);
+    setShowSuggestions(false);
+    detectInputType(suggestion);
+  };
+
+  const clearSearch = () => {
+    setQuery('');
+    setProxyContent('');
+    setError('');
+    setSuggestions([]);
+    setShowSuggestions(false);
+    setIsUrl(false);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900 p-6">
       <div className="max-w-4xl mx-auto">
-        <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 mb-6 border border-white/20">
-          <h2 className="text-2xl font-bold text-white mb-4">🌐 Web Proxy</h2>
-          <div className="bg-yellow-500/20 border border-yellow-500/50 rounded-lg p-4 mb-4">
+        
+        {/* Google-like header */}
+        <div className="text-center mb-8 pt-12">
+          <h1 className="text-6xl font-light text-white mb-8">
+            Access<span className="text-blue-300">Anywhere</span>
+          </h1>
+        </div>
+
+        {/* Smart search box */}
+        <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 mb-6 border border-white/20 relative">
+          <div className="bg-yellow-500/20 border border-yellow-500/50 rounded-lg p-3 mb-4">
             <p className="text-yellow-100 text-sm">
-              ⚠️ <strong>Disclaimer:</strong> This proxy is for educational purposes only. 
-              Please respect website terms of service and local laws.
+              💡 <strong>Smart Search:</strong> Type anything! Search questions, topics, or enter websites directly (reddit.com, youtube.com, etc.)
             </p>
           </div>
 
-          <div className="mb-4">
-            <label className="flex items-center gap-3 text-white">
-              <input
-                type="checkbox"
-                checked={useEnhanced}
-                onChange={(e) => setUseEnhanced(e.target.checked)}
-                className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
-              />
-              <span className="text-sm">
-                🚀 Enhanced Mode (Better network bypass - try this for blocked sites like Reddit)
-              </span>
-            </label>
-          </div>
-          
-          <form onSubmit={handleProxy} className="flex gap-3">
-            <input
-              type="text"
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
-              placeholder="Enter website URL (e.g., reddit.com, example.com)"
-              className="flex-1 px-4 py-3 bg-white/10 border border-white/30 rounded-lg text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <button
-              type="submit"
-              disabled={loading || !url}
-              className="px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white font-medium rounded-lg transition-colors flex items-center gap-2"
-            >
-              {loading ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                  Loading...
-                </>
-              ) : (
-                <>🚀 Access</>
+          <form onSubmit={handleSearch} className="relative">
+            <div className="relative">
+              <div className="flex items-center bg-white/20 rounded-full border border-white/30 focus-within:border-blue-400 focus-within:ring-2 focus-within:ring-blue-400/50 transition-all">
+                <div className="pl-6 pr-3 text-white/60">
+                  {isUrl ? '🌐' : '🔍'}
+                </div>
+                <input
+                  type="text"
+                  value={query}
+                  onChange={handleInputChange}
+                  onFocus={() => query.length > 2 && !isUrl && setShowSuggestions(true)}
+                  onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                  placeholder={isUrl ? "Enter website URL..." : "Search anything or enter a website..."}
+                  className="flex-1 px-2 py-4 bg-transparent text-white placeholder-white/60 focus:outline-none text-lg"
+                />
+                {query && (
+                  <button
+                    type="button"
+                    onClick={clearSearch}
+                    className="pr-3 text-white/60 hover:text-white"
+                  >
+                    ✕
+                  </button>
+                )}
+                <button
+                  type="submit"
+                  disabled={loading || !query.trim()}
+                  className="mr-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white font-medium rounded-full transition-colors flex items-center gap-2"
+                >
+                  {loading ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                      {isUrl ? 'Loading...' : 'Searching...'}
+                    </>
+                  ) : (
+                    <>{isUrl ? 'Visit' : 'Search'}</>
+                  )}
+                </button>
+              </div>
+
+              {/* Search suggestions dropdown */}
+              {showSuggestions && suggestions.length > 0 && (
+                <div className="absolute top-full left-0 right-0 mt-2 bg-white/95 backdrop-blur-md rounded-lg border border-white/20 shadow-xl z-50">
+                  {suggestions.map((suggestion, index) => (
+                    <button
+                      key={index}
+                      onClick={() => handleSuggestionClick(suggestion)}
+                      className="w-full text-left px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-900 transition-colors flex items-center gap-3 border-b border-gray-200 last:border-b-0"
+                    >
+                      <span className="text-gray-400">🔍</span>
+                      <span>{suggestion}</span>
+                    </button>
+                  ))}
+                </div>
               )}
-            </button>
+            </div>
           </form>
 
-          <div className="mt-4 text-sm text-white/70">
-            <p><strong>💡 Tips for bypassing network blocks:</strong></p>
-            <ul className="list-disc list-inside mt-2 space-y-1">
-              <li>Use Enhanced Mode for better bypass capabilities</li>
-              <li>Try different URLs: reddit.com, old.reddit.com, np.reddit.com</li>
-              <li>Some enterprise firewalls may still block certain domains</li>
-            </ul>
+          {/* Input type indicator */}
+          <div className="mt-4 text-center">
+            <p className="text-white/70 text-sm">
+              {isUrl ? (
+                <>🌐 <strong>Website Mode:</strong> Will access the website directly</>
+              ) : (
+                <>🔍 <strong>Search Mode:</strong> Will search Google for your query</>
+              )}
+            </p>
           </div>
+        </div>
+
+        {/* Quick action buttons */}
+        <div className="flex justify-center gap-3 mb-6">
+          <button
+            onClick={() => {setQuery('reddit.com'); setIsUrl(true);}}
+            className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors text-sm"
+          >
+            Reddit
+          </button>
+          <button
+            onClick={() => {setQuery('youtube.com'); setIsUrl(true);}}
+            className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors text-sm"
+          >
+            YouTube
+          </button>
+          <button
+            onClick={() => {setQuery('what is the weather today'); setIsUrl(false);}}
+            className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors text-sm"
+          >
+            Weather
+          </button>
+          <button
+            onClick={() => {setQuery('latest tech news'); setIsUrl(false);}}
+            className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors text-sm"
+          >
+            Tech News
+          </button>
         </div>
 
         {error && (
@@ -100,13 +211,46 @@ const ProxyBrowser = () => {
 
         {proxyContent && (
           <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-            <div className="bg-gray-100 px-4 py-2 border-b border-gray-200">
+            <div className="bg-gray-100 px-4 py-2 border-b border-gray-200 flex items-center justify-between">
               <p className="text-sm text-gray-600">
-                Viewing: {url} {useEnhanced && "(Enhanced Mode)"}
+                {isUrl ? `Viewing: ${query}` : `Search results for: "${query}"`}
               </p>
+              <button
+                onClick={clearSearch}
+                className="text-gray-500 hover:text-gray-700 text-sm"
+              >
+                ✕ Close
+              </button>
             </div>
             <div className="h-96 overflow-auto">
               <div dangerouslySetInnerHTML={{ __html: proxyContent }} />
+            </div>
+          </div>
+        )}
+
+        {/* Tips section */}
+        {!proxyContent && (
+          <div className="mt-8 bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10">
+            <h3 className="text-white font-semibold text-lg mb-4">💡 How to use:</h3>
+            <div className="grid md:grid-cols-2 gap-4 text-white/80 text-sm">
+              <div>
+                <h4 className="text-white font-medium mb-2">🔍 Search Mode:</h4>
+                <ul className="space-y-1">
+                  <li>• "how to learn programming"</li>
+                  <li>• "best pizza places near me"</li>
+                  <li>• "latest movie reviews"</li>
+                  <li>• "python tutorial for beginners"</li>
+                </ul>
+              </div>
+              <div>
+                <h4 className="text-white font-medium mb-2">🌐 Website Mode:</h4>
+                <ul className="space-y-1">
+                  <li>• reddit.com</li>
+                  <li>• youtube.com</li>
+                  <li>• github.com</li>
+                  <li>• stackoverflow.com</li>
+                </ul>
+              </div>
             </div>
           </div>
         )}
