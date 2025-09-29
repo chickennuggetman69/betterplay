@@ -310,7 +310,7 @@ const GamesPortal = () => {
 
 // Main App Component
 function App() {
-  const [currentView, setCurrentView] = useState('proxy');
+  const [currentView, setCurrentView] = useState('search');
 
   return (
     <div className="App">
@@ -327,14 +327,14 @@ function App() {
             
             <div className="flex items-center gap-2">
               <button
-                onClick={() => setCurrentView('proxy')}
+                onClick={() => setCurrentView('search')}
                 className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                  currentView === 'proxy'
+                  currentView === 'search'
                     ? 'bg-white text-gray-900'
                     : 'text-white hover:bg-white/20'
                 }`}
               >
-                🌐 Proxy
+                🔍 Search
               </button>
               <button
                 onClick={() => setCurrentView('games')}
@@ -353,7 +353,7 @@ function App() {
 
       {/* Main Content */}
       <div className="pt-20">
-        {currentView === 'proxy' && <ProxyBrowser />}
+        {currentView === 'search' && <SmartProxy />}
         {currentView === 'games' && <GamesPortal />}
       </div>
 
@@ -361,10 +361,10 @@ function App() {
       <footer className="bg-black/20 backdrop-blur-md border-t border-white/10 py-6">
         <div className="max-w-6xl mx-auto px-6 text-center">
           <p className="text-white/60 text-sm">
-            AccessAnywhere - Unblock websites and access GN-Math games via gn-math.dev
+            AccessAnywhere - Smart search & web access + GN-Math games via gn-math.dev
           </p>
           <p className="text-white/40 text-xs mt-2">
-            Educational use only. Direct access to GN-Math games portal.
+            Educational use only. Search anything or access websites directly.
           </p>
         </div>
       </footer>
