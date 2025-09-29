@@ -191,63 +191,7 @@ async def gnmath_proxy():
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"GN-Math proxy error: {str(e)}")
 
-# Update games initialization to include clever.college method
-@api_router.post("/games/init-clever")
-async def init_clever_games():
-    """Initialize games database with clever.college hidden games info"""
-    clever_games = [
-        {
-            "title": "🎯 GN-Math Games Portal",
-            "description": "Access all GN-Math games through clever.college (click to reveal hidden games)",
-            "category": "Portal",
-            "game_url": f"{os.environ.get('REACT_APP_BACKEND_URL', 'http://localhost:8001')}/api/clever-proxy",
-            "thumbnail": "https://images.unsplash.com/photo-1551698618-1dfe5d97d256?w=300&h=200&fit=crop"
-        },
-        {
-            "title": "Undertale", 
-            "description": "Classic indie RPG - determination and friendship",
-            "category": "RPG",
-            "game_url": "https://clever.college/",
-            "thumbnail": "https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=300&h=200&fit=crop"
-        },
-        {
-            "title": "OMORI",
-            "description": "Psychological horror RPG about anxiety and depression", 
-            "category": "RPG",
-            "game_url": "https://clever.college/",
-            "thumbnail": "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=300&h=200&fit=crop"
-        },
-        {
-            "title": "Pizza Tower",
-            "description": "Fast-paced platformer with cartoon style",
-            "category": "Platformer",
-            "game_url": "https://clever.college/", 
-            "thumbnail": "https://images.unsplash.com/photo-1606144042614-b2417e99c4e3?w=300&h=200&fit=crop"
-        },
-        {
-            "title": "Cuphead",
-            "description": "Run and gun with 1930s cartoon art style",
-            "category": "Action",
-            "game_url": "https://clever.college/",
-            "thumbnail": "https://images.unsplash.com/photo-1606092195730-5d7b9af1efc5?w=300&h=200&fit=crop"
-        },
-        {
-            "title": "ULTRAKILL",
-            "description": "Fast-paced FPS with blood mechanics",
-            "category": "Action",
-            "game_url": "https://clever.college/",
-            "thumbnail": "https://images.unsplash.com/photo-1606144042614-b2417e99c4e3?w=300&h=200&fit=crop"
-        }
-    ]
-    
-    # Clear existing games and add clever.college games
-    await db.games.delete_many({})
-    
-    for game_data in clever_games:
-        game_obj = Game(**game_data)
-        await db.games.insert_one(game_obj.dict())
-    
-    return {"message": f"Initialized {len(clever_games)} games via clever.college"}
+# Remove the games initialization - we'll just have the GN-Math portal
 
 # Enhanced proxy with network bypass techniques
 @api_router.post("/proxy-enhanced")
