@@ -12,7 +12,7 @@ import uuid
 from datetime import datetime
 import httpx
 import re
-from urllib.parse import urljoin, urlparse, parse_qs
+from urllib.parse import urljoin, urlparse, parse_qs, quote_plus
 import base64
 
 
