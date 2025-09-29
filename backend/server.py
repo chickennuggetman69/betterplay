@@ -163,67 +163,33 @@ async def delete_game(game_id: str):
         raise HTTPException(status_code=404, detail="Game not found")
     return {"message": "Game deleted successfully"}
 
-# Clever.college proxy for hidden gn-math games
-@api_router.get("/clever-proxy")
-async def clever_proxy():
-    """Proxy to clever.college which hides gn-math games behind clicks"""
+# GN-Math.dev proxy for direct access to games
+@api_router.get("/gnmath-proxy")
+async def gnmath_proxy():
+    """Direct proxy to gn-math.dev for GN-Math games"""
     try:
         async with httpx.AsyncClient(timeout=30.0, follow_redirects=True) as client:
             headers = {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
             }
             
-            response = await client.get('https://clever.college/', headers=headers)
+            response = await client.get('https://gn-math.dev/', headers=headers)
             
             if response.status_code == 200:
                 content = response.text
                 
-                # Add auto-click script to reveal hidden games
-                auto_click_script = """
-                <script>
-                // Auto-click script to reveal hidden gn-math games
-                window.addEventListener('load', function() {
-                    console.log('Auto-clicking to reveal hidden games...');
-                    
-                    // Function to simulate clicks
-                    function simulateClick(x, y) {
-                        const event = new MouseEvent('click', {
-                            view: window,
-                            bubbles: true,
-                            cancelable: true,
-                            clientX: x,
-                            clientY: y
-                        });
-                        document.elementFromPoint(x, y)?.dispatchEvent(event);
-                    }
-                    
-                    // Click multiple times at different positions to reveal games
-                    setTimeout(() => simulateClick(window.innerWidth/2, window.innerHeight/2), 1000);
-                    setTimeout(() => simulateClick(window.innerWidth/2, window.innerHeight/3), 2000);
-                    setTimeout(() => simulateClick(window.innerWidth/2, window.innerHeight/4), 3000);
-                    setTimeout(() => simulateClick(100, 100), 4000);
-                    setTimeout(() => simulateClick(200, 200), 5000);
-                    
-                    // Also try clicking on common elements
-                    setTimeout(() => {
-                        const clickableElements = document.querySelectorAll('div, span, a, button');
-                        for(let i = 0; i < Math.min(clickableElements.length, 10); i++) {
-                            setTimeout(() => clickableElements[i]?.click(), i * 500);
-                        }
-                    }, 6000);
-                });
-                </script>
-                """
-                
-                # Inject the auto-click script before closing body tag
-                content = content.replace('</body>', auto_click_script + '</body>')
+                # Fix relative URLs to work within iframe
+                content = re.sub(r'href="(/[^"]*)"', r'href="https://gn-math.dev\1"', content)
+                content = re.sub(r'src="(/[^"]*)"', r'src="https://gn-math.dev\1"', content)
+                content = re.sub(r"href='(/[^']*)'", r"href='https://gn-math.dev\1'", content)
+                content = re.sub(r"src='(/[^']*)'", r"src='https://gn-math.dev\1'", content)
                 
                 return Response(content=content, media_type="text/html")
             else:
-                raise HTTPException(status_code=response.status_code, detail="Failed to load clever.college")
+                raise HTTPException(status_code=response.status_code, detail="Failed to load gn-math.dev")
                 
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Clever proxy error: {str(e)}")
+        raise HTTPException(status_code=400, detail=f"GN-Math proxy error: {str(e)}")
 
 # Update games initialization to include clever.college method
 @api_router.post("/games/init-clever")
