@@ -196,63 +196,54 @@ async def gnmath_proxy():
 # Smart proxy that handles both search queries and URLs
 @api_router.post("/smart-proxy")
 async def smart_proxy(request: ProxyRequest):
-    """Smart proxy that detects URLs vs search queries and handles both"""
+    """Smart proxy that handles both search queries and direct URLs"""
     try:
         query = request.url.strip()
-        
-        # Check if it's a URL (has protocol or looks like domain)
+        import urllib.parse
+
+        # Detect if input looks like a URL
         is_url = (
-            query.startswith(('http://', 'https://')) or 
-            ('.' in query and ' ' not in query and len(query.split('.')) >= 2) or
-            query.startswith('www.')
+            query.startswith(('http://', 'https://')) or
+            query.startswith('www.') or
+            ('.' in query and ' ' not in query and len(query.split('.')) >= 2)
         )
-        
+
         if is_url:
-            # Handle as URL proxy
             if not query.startswith(('http://', 'https://')):
                 query = 'https://' + query
             target_url = query
         else:
-            # Handle as search query - use Google search
-            import urllib.parse
             encoded_query = urllib.parse.quote_plus(query)
-            target_url = f"https://www.google.com/search?q={encoded_query}"
-        
+            target_url = f"https://duckduckgo.com/html/?q={encoded_query}"
+
         async with httpx.AsyncClient(timeout=30.0, follow_redirects=True) as client:
             headers = {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
-                'Accept-Language': 'en-US,en;q=0.9',
-                'Accept-Encoding': 'gzip, deflate, br',
-                'DNT': '1',
-                'Connection': 'keep-alive',
-                'Upgrade-Insecure-Requests': '1'
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
             }
-            
             response = await client.get(target_url, headers=headers)
             content_type = response.headers.get('content-type', 'text/html')
-            
+
             if 'text/html' in content_type:
                 content = response.text
                 base_url = f"{urlparse(target_url).scheme}://{urlparse(target_url).netloc}"
-                
-                # Enhanced URL fixing for better compatibility
+
+                # Fix relative URLs
                 content = re.sub(r'href="(/[^"]*)"', f'href="{base_url}\\1"', content)
                 content = re.sub(r'src="(/[^"]*)"', f'src="{base_url}\\1"', content)
                 content = re.sub(r"href='(/[^']*)'", f"href='{base_url}\\1'", content)
                 content = re.sub(r"src='(/[^']*)'", f"src='{base_url}\\1'", content)
-                
+                content = re.sub(r'action="(/[^"]*)"', f'action="{base_url}\\1"', content)
+
                 # Fix protocol-relative URLs
-                content = re.sub(r'href="//([^"]*)"', r'href="https://\1"', content)
-                content = re.sub(r'src="//([^"]*)"', r'src="https://\1"', content)
-                
+                content = re.sub(r'href="//', 'href="https://', content)
+                content = re.sub(r'src="//', 'src="https://', content)
+
                 return Response(content=content, media_type="text/html")
             else:
                 return Response(content=response.content, media_type=content_type)
-                
+
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Smart proxy error: {str(e)}")
-
 # Get search suggestions (optional enhancement)
 @api_router.get("/search-suggestions")
 async def get_search_suggestions(q: str = Query(...)):
